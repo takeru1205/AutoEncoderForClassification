@@ -32,11 +32,13 @@ class ImbalancedCIFAR10(Dataset):
             for count, prop in zip(class_datasize, self.imbal_class_prop)
         ]
         # Get class indices for reduced class count
+        classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 
+                'dog', 'frog', 'horse', 'ship', 'truck']
         idxs = []
         for c in range(class_counts):
             imbal_class_count = self.imbal_class_counts[c]
             idxs.append(class_indices[c][:imbal_class_count])
-            print(f'Label {c} Data Size: {imbal_class_count}')
+            print(f'Label {c}, {classes[c]} Data Size: {imbal_class_count}')
         idxs = np.hstack(idxs)
         self.labels = targets[idxs]
         return idxs
