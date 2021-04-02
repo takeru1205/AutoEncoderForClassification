@@ -1,3 +1,7 @@
+"""
+Train Script of Combined Model AE and Classifier
+These are trained at the same time
+"""
 import numpy as np
 import torch
 import torch.nn as nn

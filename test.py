@@ -1,3 +1,6 @@
+"""
+Evaluation Script of Auto Encoder Model (ae.py)
+"""
 import numpy as np
 import torch
 import torchvision

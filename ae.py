@@ -1,3 +1,6 @@
+"""
+Train Script of Auto Encoder Model
+"""
 import numpy as np
 import torch
 import torchvision

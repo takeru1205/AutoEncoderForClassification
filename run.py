@@ -1,3 +1,7 @@
+"""
+Train and Evaluation Script of Combined Model AutoEncoder and Classifier.
+These are trained separatly.
+"""
 import numpy as np
 import torch
 import torchvision
