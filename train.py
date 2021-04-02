@@ -18,7 +18,8 @@ transform = transforms.Compose(
         )
 
 # Load Train Data
-train_imbalance_class_ratio = np.array([1., 1., .5, 1., .5, 1., 1., 1., 1., .5])
+# train_imbalance_class_ratio = np.array([1., 1., .5, 1., .5, 1., 1., 1., 1., .5])
+train_imbalance_class_ratio = np.array([1.] * 10)
 train_set = ImbalancedCIFAR10(train_imbalance_class_ratio, transform=transform)
 train_loader = torch.utils.data.DataLoader(train_set, batch_size=4, shuffle=True, num_workers=4)
 
