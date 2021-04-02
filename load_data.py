@@ -1,3 +1,6 @@
+"""
+Refer from https://github.com/statsu1990/yoto_class_balanced_loss
+"""
 import numpy as np
 import torch
 import torchvision
