@@ -24,4 +24,67 @@ class Net(nn.Module):
         return x
 
 
+class AutoEncoder(nn.Module):
+    def __init__(self):
+        super(AutoEncoder, self).__init__()
+        self.encoder = nn.Sequential(
+                nn.Conv2d(3, 8, 5, stride=2, padding=2),
+                nn.PReLU(),
+                nn.Conv2d(8, 8, 5, stride=2, padding=2),
+                nn.PReLU(),
+                )
+        self.decoder = nn.Sequential(
+                nn.ConvTranspose2d(8, 8, 6, stride=2, padding=2),
+                nn.PReLU(),
+                nn.ConvTranspose2d(8, 3, 6, stride=2, padding=2),
+                nn.Sigmoid(),
+                )
+
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.decoder(x)
+        return x
+
+
+class Combine(nn.Module):
+    def __init__(self):
+        super(Combine, self).__init__()
+        self.encoder = nn.Sequential(
+                nn.Conv2d(3, 8, 5, stride=2, padding=2),
+                nn.PReLU(),
+                nn.Conv2d(8, 8, 5, stride=2, padding=2),
+                nn.PReLU(),
+                )
+
+        self.decoder = nn.Sequential(
+                nn.ConvTranspose2d(8, 8, 6, stride=2, padding=2),
+                nn.PReLU(),
+                nn.ConvTranspose2d(8, 3, 6, stride=2, padding=2),
+                nn.Sigmoid(),
+                )
+
+        self.classifier = nn.Sequential(
+                nn.Linear(8 * 8 * 8, 126),
+                nn.ReLU(),
+                nn.Linear(126, 64),
+                nn.ReLU(),
+                nn.Linear(64, 10),
+                )
+
+    def forward(self, x):
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        predicted = self.classifier(encoded.view(-1, 8 * 8 * 8))
+        return decoded, predicted
+                
+
+
+"""
+ae = AutoEncoder()
+ae.encoder.load_state_dict(torch.load('model_weights/auto_encoder'))
+"""
+if __name__ == '__main__':
+    ae = AutoEncoder()
+    ae.encoder.load_state_dict(torch.load('model_weights/auto_encoder'))
+    print(ae)
 
