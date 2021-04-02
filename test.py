@@ -7,22 +7,23 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 
-from model import AutoEncoder
+from model import AutoEncoder, CAE
 from load_data import ImbalancedCIFAR10
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
-train_imbalance_class_ratio = np.array([1., 1., .5, 1., .5, 1., 1., 1., 1., .5])
-train_imbalanced_dataset = ImbalancedCIFAR10(train_imbalance_class_ratio)
-train_imbalanced_loader = DataLoader(train_imbalanced_dataset, batch_size=4, shuffle=True, num_workers=4)
+train_imbalance_class_ratio = np.array([1.] * 10)
+train_imbalanced_dataset = ImbalancedCIFAR10(train_imbalance_class_ratio, train=False)
+train_imbalanced_loader = DataLoader(train_imbalanced_dataset, batch_size=4, shuffle=False, num_workers=4)
 
 # Load Model
-net = AutoEncoder()
+# net = AutoEncoder()
+net = CAE()
 net.load_state_dict(torch.load('model_weights/auto_encoder'))
 net = net.to(device)
 
 def imshow(img):
-    img = img / 2 + 0.5
+    #img = img / 2 + 0.5
     npimg = img.numpy()
     plt.imshow(np.transpose(npimg, (1, 2, 0)))
     plt.show()

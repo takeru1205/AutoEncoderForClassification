@@ -46,6 +46,50 @@ class AutoEncoder(nn.Module):
         return x
 
 
+class Encoder(nn.Module):
+    def __init__(self):
+        super(Encoder, self).__init__()
+        
+        self.conv1 = nn.Conv2d(3, 12, 4, stride=2, padding=1)
+        self.conv2 = nn.Conv2d(12, 24, 4, stride=2, padding=1)
+        self.conv3 = nn.Conv2d(24, 48, 4, stride=2, padding=1)
+
+        
+    def forward(self, x):
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+        return x
+
+class Decoder(nn.Module):
+    def __init__(self):
+        super(Decoder, self).__init__()
+        self.deconv1 = nn.ConvTranspose2d(48, 24, 4, stride=2, padding=1)
+        self.deconv2 = nn.ConvTranspose2d(24, 12, 4, stride=2, padding=1)
+        self.deconv3 = nn.ConvTranspose2d(12, 3, 4, stride=2, padding=1)
+
+        
+    def forward(self, x):
+        x = F.relu(self.deconv1(x))
+        x = F.relu(self.deconv2(x))
+        x = self.deconv3(x)
+        x = torch.sigmoid(x)
+        return x
+        
+class CAE(nn.Module):
+    def __init__(self):
+        super(CAE, self).__init__()
+        
+        self.encoder = Encoder()
+        self.decoder = Decoder()
+        
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.decoder(x)
+        
+        return x
+
+
 class Combine(nn.Module):
     def __init__(self):
         super(Combine, self).__init__()
@@ -76,6 +120,14 @@ class Combine(nn.Module):
         decoded = self.decoder(encoded)
         predicted = self.classifier(encoded.view(-1, 8 * 8 * 8))
         return decoded, predicted
+
+    def autoencode(self, x):
+        encoded = self.encoder(x)
+        return self.decoder(encoded)
+
+    def predict(self, x):
+        encoded = self.encoder(x)
+        return self.classifier(encoded.view(-1, 8 * 8 * 8))
                 
 
 
