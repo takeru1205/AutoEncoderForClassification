@@ -7,11 +7,13 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import Dataset, DataLoader
 
-
+"""
 transform = transforms.Compose(
         [transforms.ToTensor(),
          transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-
+"""
+transform = transforms.Compose(
+        [transforms.ToTensor(),])
 
 class ImbalancedCIFAR10(Dataset):
     def __init__(self, imbal_class_prop, root='./data', train=True, download=True, transform=transform):
