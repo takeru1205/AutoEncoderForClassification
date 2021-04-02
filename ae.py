@@ -40,10 +40,9 @@ for epoch in range(3):
         optimizer.step()
         running_loss += loss.item()
         if i % 200 == 199:
-            if i % 200 == 199:
-                print('[%d, %5d] loss: %.3f' %
-                      (epoch + 1, i + 1, running_loss / 200))
-                running_loss = 0.0
+            print('[%d, %5d] loss: %.3f' %
+                    (epoch + 1, i + 1, running_loss / 200))
+            running_loss = 0.0
 
 # Save Model
 torch.save(net.state_dict(), 'model_weights/auto_encoder')
