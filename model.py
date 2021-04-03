@@ -75,18 +75,38 @@ class Decoder(nn.Module):
         x = self.deconv3(x)
         x = torch.sigmoid(x)
         return x
+
+class Classifier(nn.Module):
+    def __init__(self):
+        super(Classifier, self).__init__()
+        self.fc1 = nn.Linear(48 * 4 * 4, 512)
+        self.fc2 = nn.Linear(512, 128)
+        self.fc3 = nn.Linear(128, 10)
+
+    def forward(self, x):
+        x = x.view(-1, 48 * 4 * 4)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
         
+
 class CAE(nn.Module):
     def __init__(self):
         super(CAE, self).__init__()
         
         self.encoder = Encoder()
         self.decoder = Decoder()
+        self.classifier = Classifier()
         
     def forward(self, x):
         x = self.encoder(x)
         x = self.decoder(x)
-        
+        return x
+
+    def classify(self, x):
+        x = self.encoder(x)
+        x = self.classifier(x)
         return x
 
 
