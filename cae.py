@@ -8,7 +8,8 @@ import torchvision
 import torchvision.transforms as transforms
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, Subset
+from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
 from load_data import ImbalancedCIFAR10
@@ -23,9 +24,19 @@ transform = transforms.Compose(
 
 # Load Train Data
 train_imbalance_class_ratio = np.array([1., 1., .5, 1., .5, 1., 1., 1., 1., .5])
-# train_imbalance_class_ratio = np.array([1.] * 10)
+# train_imbalance_class_ratio = np.array([.5] * 10)
 train_set = ImbalancedCIFAR10(train_imbalance_class_ratio, transform=transform)
-train_loader = torch.utils.data.DataLoader(train_set, batch_size=8, shuffle=True, num_workers=4)
+#train_loader = torch.utils.data.DataLoader(train_set, batch_size=8, shuffle=True, num_workers=4)
+
+# Cross Validation Dataset(Stratified K Fold)
+train_indices, val_indices = train_test_split(list(range(len(train_set.labels))), test_size=0.2, stratify=train_set.labels)
+print(f'Train Size: {len(train_indices)}')
+print(f'Validation Size: {len(val_indices)}')
+train_dataset = Subset(train_set, train_indices)
+val_dataset = Subset(train_set, val_indices)
+
+train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, num_workers=4)
+val_loader = DataLoader(val_dataset, batch_size=8, shuffle=True, num_workers=4)
 
 # Load Test Data
 test_set = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
@@ -45,7 +56,7 @@ optimizer = optim.Adam(net.parameters())
 # Train Auto Encoder Part
 print('Start Auto Encoder Training')
 net.classifier.requires_grad = False
-for epoch in range(3):
+for epoch in range(5):
     running_loss = 0.0
     for i, data in enumerate(train_loader, 0):
         inputs, _ = data
@@ -67,8 +78,9 @@ print('Start Classification Training')
 net.classifier.requires_grad = True
 net.encoder.requires_grad = False
 net.decoder.requires_grad = False
-for epoch in range(10):
+for epoch in range(20):
     running_loss = 0.0
+    # Train
     for i, data in enumerate(train_loader, 0):
         inputs, labels = data
         inputs = inputs.to(device)
@@ -85,11 +97,25 @@ for epoch in range(10):
         if i % 2000 == 1999:
             print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 2000))
             running_loss = 0.0
+    # Validation
+    total, correct = 0, 0
+    for i, data in enumerate(val_loader, 0):
+        inputs, labels = data
+        inputs = inputs.to(device)
+        labels = labels.to(device)
+        predicted = net.classify(inputs)
+
+        _, predicted = torch.max(predicted.data, 1)
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()
+
+    print(f'Epoch: {epoch}, Validation Score: %d %%' % (100 * correct / total))
+
 
 
 def imshow(img):
     # 非正規化する
-    img = img / 2 + 0.5
+    # img = img / 2 + 0.5
     # torch.Tensor型からnumpy.ndarray型に変換する
     print(type(img)) # <class 'torch.Tensor'>
     npimg = img.numpy()
