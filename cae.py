@@ -2,6 +2,7 @@
 Train and Evaluation Script of Combined Model AutoEncoder and Classifier.
 These are trained separatly.
 """
+import argparse
 import numpy as np
 import torch
 import torchvision
@@ -18,6 +19,11 @@ from load_data import ImbalancedCIFAR10
 from model import CAE, CAE2
 from utils import GridMask, AddNoise, imshow, imsave, ImbalancedDatasetSampler
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--train-epoch", default=50, type=int, help='Epoch of train Classification')
+parser.add_argument("--ae-epoch", default=100, type=int, help='Epoch of train Auto Encoder')
+parser.add_argument("--load", action='store_true', help='To load model weight')
+args = parser.parse_args()
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
@@ -52,7 +58,7 @@ ae_epoch = 100
 train_epoch = 50
 
 # Log
-writer = SummaryWriter(log_dir=f'cae/cae2-{ae_epoch}-{train_epoch}-noise-TrainOptim-0001-fcdp')
+writer = SummaryWriter(log_dir=f'cae/cae2-{args.ae_epoch}-{args.train_epoch}-noise-TrainOptim-0001-fcdp-fixparam')
 
 # Load Train Data
 train_imbalance_class_ratio = np.array([1., 1., .5, 1., .5, 1., 1., 1., 1., .5])
@@ -102,9 +108,8 @@ optimizer = optim.Adam(net.parameters(), lr=0.0001)
 
 # Train Auto Encoder Part
 print('Start Auto Encoder Training')
-# net.classifier.requires_grad = False
 ae_iter = 0
-for epoch in range(ae_epoch):
+for epoch in range(args.ae_epoch):
     running_loss = 0.0
     for i, data in enumerate(train_loader, 0):
         inputs, _ = data
@@ -131,16 +136,8 @@ output = net(images.to(device))
 imsave(torchvision.utils.make_grid(output.cpu().data), 'predict.png')
 
 # Train Classification Part
-print('Start Classification Training')
-net.classifier.requires_grad = True
-net.encoder.requires_grad = False
-# net.decoder.requires_grad = False
-
-for param in net.encoder.parameters():
-    param.requires_grad = False
-
 train_iter, val_iter = 0, 0
-for epoch in range(train_epoch):
+for epoch in range(args.train_epoch):
     running_loss = 0.0
     # Train
     for i, data in enumerate(train_loader, 0):
