@@ -49,10 +49,10 @@ torch.manual_seed(SEED)
 torch.cuda.manual_seed(SEED)
 
 ae_epoch = 100
-train_epoch = 30
+train_epoch = 50
 
 # Log
-writer = SummaryWriter(log_dir=f'cae/cae2-{ae_epoch}-{train_epoch}-noise-TrainOptim-0001-update-fcdp')
+writer = SummaryWriter(log_dir=f'cae/cae2-{ae_epoch}-{train_epoch}-noise-TrainOptim-0001-fcdp')
 
 # Load Train Data
 train_imbalance_class_ratio = np.array([1., 1., .5, 1., .5, 1., 1., 1., 1., .5])
@@ -133,8 +133,12 @@ imsave(torchvision.utils.make_grid(output.cpu().data), 'predict.png')
 # Train Classification Part
 print('Start Classification Training')
 net.classifier.requires_grad = True
-# net.encoder.requires_grad = False
+net.encoder.requires_grad = False
 # net.decoder.requires_grad = False
+
+for param in net.encoder.parameters():
+    param.requires_grad = False
+
 train_iter, val_iter = 0, 0
 for epoch in range(train_epoch):
     running_loss = 0.0
