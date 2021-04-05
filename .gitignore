@@ -2,3 +2,5 @@ data/
 cae/
 __pycache__/
 model_weights/
+target.png
+predict.png
