@@ -109,6 +109,108 @@ class CAE(nn.Module):
         x = self.classifier(x)
         return x
 
+class Encoder2(nn.Module):
+    def __init__(self):
+        super(Encoder2, self).__init__()
+        self.conv1 = nn.Conv2d(3, 16, 3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(16, 8, 3, stride=1, padding=1)
+        self.conv3 = nn.Conv2d(8, 8, 3, stride=1, padding=1)
+
+        self.pool1 = nn.MaxPool2d(2, stride=2)
+        self.pool2 = nn.MaxPool2d(2, stride=2)
+
+        self.bn1 = nn.BatchNorm2d(16)
+        self.bn2 = nn.BatchNorm2d(8)
+        self.bn3 = nn.BatchNorm2d(8)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = F.elu(x)
+        x = self.pool1(x)
+
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = F.elu(x)
+        x = self.pool2(x)
+
+        x = self.conv3(x)
+        x = self.bn3(x)
+        x = F.elu(x)
+
+        return x
+
+class Decoder2(nn.Module):
+    def __init__(self):
+        super(Decoder2, self).__init__()
+        self.deconv3 = nn.ConvTranspose2d(8, 8, 3, stride=1, padding=1)
+        self.deconv2 = nn.ConvTranspose2d(8, 16, 3, stride=1, padding=1)
+        self.deconv1 = nn.ConvTranspose2d(16, 3, 3, stride=1, padding=1)
+        
+        # self.upsample2 = nn.Upsample(scale_factor=2, mode='bilinear')
+        self.upsample2 = nn.Upsample(scale_factor=2)
+        # self.upsample1 = nn.Upsample(scale_factor=2, mode='bilinear')
+        self.upsample1 = nn.Upsample(scale_factor=2)
+        
+        self.bn3 = nn.BatchNorm2d(8)
+        self.bn2 = nn.BatchNorm2d(16)
+        
+    def forward(self, x):
+        x = self.deconv3(x)
+        x = self.bn3(x)
+        x = F.elu(x)
+        
+        x = self.upsample2(x)
+        
+        x = self.deconv2(x)
+        x = self.bn2(x)
+        x = F.elu(x)
+        
+        x = self.upsample1(x)
+        
+        x = self.deconv1(x)
+        x = torch.sigmoid(x)
+        
+        return x
+
+class Classifier2(nn.Module):
+    def __init__(self):
+        super(Classifier2, self).__init__()
+        self.fc1 = nn.Linear(512, 256)
+        self.fc2 = nn.Linear(256, 128)
+        self.fc3 = nn.Linear(128, 10)
+
+        self.dp = nn.Dropout(p=0.2)
+
+    def forward(self, x):
+        x = x.view(-1, 512)
+        x = self.fc1(x)
+        x = F.elu(x)
+        x = self.dp(x)
+
+        x = self.fc2(x)
+        x = F.elu(x)
+
+        x = self.fc3(x)
+        return x
+
+class CAE2(nn.Module):
+    def __init__(self):
+        super(CAE2, self).__init__()
+        self.encoder = Encoder2()
+        self.decoder = Decoder2()
+        self.classifier = Classifier2()
+
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.decoder(x)
+        return x
+    
+    def classify(self, x):
+        x = self.encoder(x)
+        x = self.classifier(x)
+        return x
+
 
 class Combine(nn.Module):
     def __init__(self):
