@@ -58,7 +58,7 @@ ae_epoch = 100
 train_epoch = 50
 
 # Log
-writer = SummaryWriter(log_dir=f'cae/cae2-{args.ae_epoch}-{args.train_epoch}-noise-TrainOptim-0001-fcdp')
+writer = SummaryWriter(log_dir=f'cae/cae-{args.ae_epoch}-{args.train_epoch}-noise-TrainOptim-0001-leaky')
 
 # Load Train Data
 train_imbalance_class_ratio = np.array([1., 1., .5, 1., .5, 1., 1., 1., 1., .5])
@@ -101,8 +101,8 @@ net = net.to(device)
 net.train()
 
 criterion = nn.CrossEntropyLoss()
-# ae_criterion = nn.MSELoss()
-ae_criterion = nn.BCELoss()
+ae_criterion = nn.MSELoss()
+# ae_criterion = nn.BCELoss()
 ae_optimizer = optim.Adam(net.parameters())
 optimizer = optim.Adam(net.parameters(), lr=0.0001)
 
