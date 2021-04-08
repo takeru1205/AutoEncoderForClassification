@@ -16,7 +16,7 @@ from sklearn.metrics import confusion_matrix, f1_score, classification_report
 from sklearn.model_selection import train_test_split
 
 from load_data import ImbalancedCIFAR10
-from model import CAE, CAE2
+from model import CAE, CAE2, CAE3, CAE4
 from utils import GridMask, AddNoise, imshow, imsave, ImbalancedDatasetSampler
 
 parser = argparse.ArgumentParser()
@@ -29,6 +29,7 @@ device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
 train_transform = transforms.Compose(
         [
+            # transforms.Grayscale(),
             transforms.RandomHorizontalFlip(p=0.6),
             transforms.RandomVerticalFlip(p=0.6),
             # transforms.RandomAffine(degrees=[-10, 10], translate=(0.1, 0.1), scale=(0.5, 1.5)),
@@ -42,6 +43,7 @@ train_transform = transforms.Compose(
 
 evaluate_transform = transforms.Compose(
         [
+            # transforms.Grayscale(),
             transforms.ToTensor(),
             # transforms.Normalize((0.4915, 0.4823, 0.4468),
             #              (0.2470, 0.2435, 0.2616))
@@ -54,15 +56,13 @@ np.random.seed(SEED)
 torch.manual_seed(SEED)
 torch.cuda.manual_seed(SEED)
 
-ae_epoch = 100
-train_epoch = 50
 
 # Log
-writer = SummaryWriter(log_dir=f'cae/cae-{args.ae_epoch}-{args.train_epoch}-noise-TrainOptim-0001-leaky')
+writer = SummaryWriter(log_dir=f'cae/cae2-{args.ae_epoch}-{args.train_epoch}-noise-TrainOptim-0001-leaky-sgd-undersample')
 
 # Load Train Data
-train_imbalance_class_ratio = np.array([1., 1., .5, 1., .5, 1., 1., 1., 1., .5])
-# train_imbalance_class_ratio = np.array([.5] * 10)
+#train_imbalance_class_ratio = np.array([1., 1., .5, 1., .5, 1., 1., 1., 1., .5])
+train_imbalance_class_ratio = np.array([.5] * 10)
 train_set = ImbalancedCIFAR10(train_imbalance_class_ratio, transform=evaluate_transform)
 #train_loader = torch.utils.data.DataLoader(train_set, batch_size=8, shuffle=True, num_workers=4)
 
@@ -98,18 +98,26 @@ classes = ('plane', 'car', 'bird', 'cat',
 
 net = CAE2()
 net = net.to(device)
+
+if args.load:
+    net.load_state_dict(torch.load('model_weights/CAE2-63%'))
+    net.classifier.weights_init()
 net.train()
 
 criterion = nn.CrossEntropyLoss()
-ae_criterion = nn.MSELoss()
-# ae_criterion = nn.BCELoss()
-ae_optimizer = optim.Adam(net.parameters())
-optimizer = optim.Adam(net.parameters(), lr=0.0001)
+# ae_criterion = nn.MSELoss()
+ae_criterion = nn.BCELoss()
+# ae_optimizer = optim.Adam(net.parameters())
+ae_optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+# optimizer = optim.Adam(net.parameters(), lr=0.0001)
+optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
 # Train Auto Encoder Part
 print('Start Auto Encoder Training')
 ae_iter = 0
 for epoch in range(args.ae_epoch):
+    if args.load:
+        break
     running_loss = 0.0
     for i, data in enumerate(train_loader, 0):
         inputs, _ = data
@@ -183,6 +191,9 @@ for epoch in range(args.train_epoch):
     # Save Model
     if (epoch+1) % 10 == 0: 
         torch.save(net.state_dict(), f'model_weights/CAE-{epoch}')
+
+# Save Mdels
+net.save_model()
 
 # Evaluate Loop
 '''
