@@ -1,5 +1,6 @@
 data/
 cae/
+sample/
 __pycache__/
 model_weights/
 target.png
