@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.utils.data as data
 import torchvision
+import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 
 
@@ -107,18 +108,28 @@ class ImbalancedDatasetSampler(data.sampler.Sampler):
         return self.num_samples
 
 
+def calc_img_stats(loader):
+    """
+    infer from https://github.com/abhinav3/CIFAR-Autoencoder-Classification/blob/master/Notebook2-AutoEncoder-MSELoss-Compressionfactor2.ipynb
+    """
+    mean = 0.
+    std = 0.
+    nb_samples = 0.
+    for imgs,_ in loader:
+        batch_samples = imgs.size(0)
+        imgs = imgs.view(batch_samples, imgs.size(1), -1)
+        mean += imgs.mean(2).sum(0)
+        std += imgs.std(2).sum(0)
+        nb_samples += batch_samples
+
+    mean /= nb_samples
+    std /= nb_samples
+    return mean,std
+
+
 def imshow(img):
-    # 非正規化する
-    # img = img / 2 + 0.5
-    # torch.Tensor型からnumpy.ndarray型に変換する
-    # print(type(img)) # <class 'torch.Tensor'>
     npimg = img.numpy()
-    # print(type(npimg))
-    # 形状を（RGB、縦、横）から（縦、横、RGB）に変換する
-    # print(npimg.shape)
     npimg = np.transpose(npimg, (1, 2, 0))
-    # print(npimg.shape)
-    # 画像を表示する
     plt.imshow(npimg)
     plt.show()
 
@@ -127,5 +138,20 @@ def imsave(img, fname='sample.png'):
     npimg = img.numpy()
     npimg = np.transpose(npimg, (1, 2, 0))
     plt.imsave(fname, npimg)
+
+
+tmp_transform = transforms.Compose(
+        [
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation(degrees=20),
+            transforms.RandomResizedCrop(32),
+            transforms.ToTensor(),
+        ])
+
+
+tmp_eval_transform = transforms.Compose(
+        [
+            transforms.ToTensor(),
+        ])
 
 
