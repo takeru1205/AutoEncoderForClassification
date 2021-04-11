@@ -1,20 +1,15 @@
 """
 Refer from https://github.com/statsu1990/yoto_class_balanced_loss
 """
-from multiprocessing import Pool
-import random
+from copy import deepcopy
 import numpy as np
 import torch
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import Dataset, DataLoader, Subset
 from sklearn.model_selection import train_test_split
+from utils import ImbalancedDatasetSampler
 
-"""
-transform = transforms.Compose(
-        [transforms.ToTensor(),
-         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-"""
 transform = transforms.Compose(
         [transforms.ToTensor(),])
 
@@ -65,40 +60,73 @@ def separate_data(dataset, indices, minority=(2, 4, 9)):
     for idx in range(data_len):
         _, label = dataset[idx]
         class_dict[label].append(indices[idx])
-    for k in class_dict.keys():
-        print(f'Label {k}: {len(class_dict[k])}')
+    # for k in class_dict.keys():
+    #     print(f'Label {k}: {len(class_dict[k])}')
     d1_indices = [class_dict[k] if k in minority else class_dict[k][:len(class_dict[k])//2] for k in class_dict.keys() ]
     d2_indices = [class_dict[k] if k in minority else class_dict[k][len(class_dict[k])//2:] for k in class_dict.keys() ]
     return sum(d1_indices, []), sum(d2_indices, [])
 
-       
+
+def generate_data(train_imbalance_class_ratio, train_transform, evaluate_transform, over_sample_batch_size=128, under_sample_batch_size=64, val_batch_size=64, test_batch_size=4):
+    # Load Train Data
+    train_set = ImbalancedCIFAR10(train_imbalance_class_ratio, transform=evaluate_transform)
+
+    # Cross Validation Dataset(Stratified K Fold)
+    train_indices, val_indices = train_test_split(list(range(len(train_set.labels))), test_size=0.2, stratify=train_set.labels)
+    train_dataset = Subset(train_set, train_indices)
+    train_dataset.dataset.transform = train_transform
+    val_dataset = Subset(train_set, val_indices)
+    val_dataset.dataset.transform = evaluate_transform
+
+    # Tom choose indexes for under sampling
+    train1_indices, train2_indices = separate_data(train_dataset, train_indices)
+
+    train1_dataset = deepcopy(train_dataset)
+    train2_dataset = deepcopy(train_dataset)
+    train1_dataset.indices = train1_indices
+    train2_dataset.indices = train2_indices
+
+    # Data Loader
+    train_loader = DataLoader(train_dataset, sampler=ImbalancedDatasetSampler(train_dataset),
+                                             batch_size=over_sample_batch_size, shuffle=False, num_workers=4)  # Over Sampling Data
+    train1_loader = DataLoader(train1_dataset, batch_size=under_sample_batch_size, shuffle=True, num_workers=4)  # Under Sampling Data 1
+    train2_loader = DataLoader(train2_dataset, batch_size=under_sample_batch_size, shuffle=True, num_workers=4)  # Under Sampling Data 2
+    val_loader = DataLoader(val_dataset, batch_size=val_batch_size, shuffle=True, num_workers=4)  # Validation Data
+
+    print(f'Train Size: {len(train_loader.dataset)}')
+    print(f'Train1 Size: {len(train1_loader.dataset)}')
+    print(f'Train2 Size: {len(train2_loader.dataset)}')
+    print(f'Validation Size: {len(val_loader.dataset)}')
+
+    print(torch.tensor(train_dataset.dataset.labels[train_indices]).unique(return_counts=True)[1])
+    print(torch.tensor(train1_dataset.dataset.labels[train1_indices]).unique(return_counts=True)[1])
+    print(torch.tensor(train2_dataset.dataset.labels[train2_indices]).unique(return_counts=True)[1])
+    print(torch.tensor(val_dataset.dataset.labels[val_indices]).unique(return_counts=True)[1])
+
+    # Load Test Data
+    test_set = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=evaluate_transform)
+    test_loader = torch.utils.data.DataLoader(test_set, batch_size=test_batch_size, shuffle=False, num_workers=4)
+
+    return train_loader, train1_loader, train2_loader, val_loader, test_loader
+
+
 
 if __name__ == '__main__':
-    cifar10 = SeparateCIFAR10()
-    d1, d2, val = cifar10.train_val_split()
-    train_imbalanced_loader = torch.utils.data.DataLoader(d1)
-    d2_loader = torch.utils.data.DataLoader(d2)
-    val_loader = torch.utils.data.DataLoader(val)
-
-    """
-    # train_imbalance_class_ratio = np.hstack(([0.1] * 5, [1.0] * 5))
     train_imbalance_class_ratio = np.array([1., 1., .5, 1., .5, 1., 1., 1., 1., .5])
-    train_imbalanced_dataset = ImbalancedCIFAR10(train_imbalance_class_ratio)
-    train_imbalanced_loader = torch.utils.data.DataLoader(
-    train_imbalanced_dataset, batch_size=4, sample=True, num_workers=4)
-    """
-    import matplotlib.pyplot as plt
-    
-    def imshow(img):
-        img = img / 2 + 0.5
-        npimg = img.numpy()
-        plt.imshow(np.transpose(npimg, (1, 2, 0)))
-        plt.show()
-    dataiter = iter(train_imbalanced_loader)
-    images, labels = dataiter.next()
+    # Generate Datasets
+    train_loader, train1_loader, train2_loader, val_loader, test_loader = generate_data(train_imbalance_class_ratio, transform, transform)
 
     classes = ('plane', 'car', 'bird', 'cat',
             'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+
+    import matplotlib.pyplot as plt
+    
+    def imshow(img):
+        npimg = img.numpy()
+        plt.imshow(np.transpose(npimg, (1, 2, 0)))
+        plt.show()
+    dataiter = iter(test_loader)
+    images, labels = dataiter.next()
 
     imshow(torchvision.utils.make_grid(images))
     print(' '.join('%5s' % classes[labels[j]] for j in range(4)))
