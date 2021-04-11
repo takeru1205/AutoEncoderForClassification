@@ -5,7 +5,6 @@ import torchvision.transforms as transforms
 from torch.utils.tensorboard import SummaryWriter
 
 from load_data import generate_data
-from model import CAE3
 from train import Trainer
 
 
