@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
-from sklearn.metrics import confusion_matrix, f1_score, classification_report
+from sklearn.metrics import classification_report
 
 from model import CAE3
 from utils import image_result
