@@ -9,9 +9,11 @@ Implement Classifier model with Auto Encoder.
 ### Architecture
 
 1. Auto Encoder
+
 Encoder -> Hidden Layer -> Decoder
 
 2. Fully Connected Layer
+
 Hidden Layer(from Auto Encoder) -> NN -> 10 dims outputs
 
 
@@ -47,4 +49,5 @@ Max Size 5000 images
 | CAE3(2ensemble) | 75.0 | 0.632 |
 | CAE3(3ensemble) | 77.6 | 0.489 | 
 
+Pretrained Weight is available [here](https://drive.google.com/drive/folders/1B4mSPVkEN2pWp2hAWq9eMPJnIkr4zE9i?usp=sharing)
 
