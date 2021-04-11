@@ -9,12 +9,12 @@ from model import CAE
 from utils import image_result
 
 class Trainer:
-    def __init__(self, train0_loader, train1_loader, train2_loader, val_loader, ae_epoch=40, train_epoch=40, ae_lr=0.0005, classify_lr=0.0005, writer=None):
+    def __init__(self, train0_loader=None, train1_loader=None, train2_loader=None, val_loader=None, ae_epoch=40, train_epoch=40, ae_lr=0.0005, classify_lr=0.0005, writer=None):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-        self.net0 = CAE3()
-        self.net1 = CAE3()
-        self.net2 = CAE3()
+        self.net0 = CAE()
+        self.net1 = CAE()
+        self.net2 = CAE()
 
         self.net0 = self.net0.to(self.device)
         self.net1 = self.net1.to(self.device)
