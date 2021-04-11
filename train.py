@@ -5,7 +5,7 @@ import torch.optim as optim
 import torchvision
 from sklearn.metrics import classification_report
 
-from model import CAE3
+from model import CAE
 from utils import image_result
 
 class Trainer:
