@@ -37,5 +37,14 @@ Max Size 5000 images
 
 1000 for each class.
 
+### Results
+
+| Algorithm | Mean | Std |
+| :---: | :---: | :---: |
+| Combine | 31.6 | 10.818 |
+| CAE3(Over Sample) | 72.8 | 0.4 |
+| CAE3(Under Sample) | 69.6 | 0.489 |
+| CAE3(2ensemble) | 75.0 | 0.632 |
+| CAE3(3ensemble) | 77.6 | 0.489 | 
 
 
