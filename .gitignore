@@ -4,5 +4,4 @@ sample/
 logs/
 __pycache__/
 model_weights/
-target.png
-predict.png
+*.png
