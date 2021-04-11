@@ -17,7 +17,7 @@ device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
 train_imbalance_class_ratio = np.array([1.] * 10)
 train_imbalanced_dataset = ImbalancedCIFAR10(train_imbalance_class_ratio, train=False)
-train_imbalanced_loader = DataLoader(train_imbalanced_dataset, batch_size=4, shuffle=False, num_workers=4)
+train_imbalanced_loader = DataLoader(train_imbalanced_dataset, batch_size=64, shuffle=False, num_workers=4)
 
 # Load Model
 # net = AutoEncoder()

@@ -14,10 +14,10 @@ from load_data import ImbalancedCIFAR10
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
-#train_imbalance_class_ratio = np.array([1., 1., .5, 1., .5, 1., 1., 1., 1., .5])
-train_imbalance_class_ratio = np.array([1.] * 10)
+train_imbalance_class_ratio = np.array([1., 1., .5, 1., .5, 1., 1., 1., 1., .5])
+#train_imbalance_class_ratio = np.array([1.] * 10)
 train_imbalanced_dataset = ImbalancedCIFAR10(train_imbalance_class_ratio)
-train_imbalanced_loader = DataLoader(train_imbalanced_dataset, batch_size=4, shuffle=True, num_workers=4)
+train_imbalanced_loader = DataLoader(train_imbalanced_dataset, batch_size=64, shuffle=True, num_workers=4)
 
 # net = AutoEncoder()
 net = CAE()
