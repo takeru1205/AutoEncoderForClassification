@@ -8,6 +8,7 @@ from sklearn.metrics import classification_report
 from model import CAE
 from utils import image_result
 
+
 class Trainer:
     def __init__(self, train0_loader=None, train1_loader=None, train2_loader=None, val_loader=None, ae_epoch=40, train_epoch=40, ae_lr=0.0005, classify_lr=0.0005, writer=None):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -20,7 +21,6 @@ class Trainer:
         self.net1 = self.net1.to(self.device)
         self.net2 = self.net2.to(self.device)
 
-        
         self.ae_epoch = 40
         self.train_epoch = 40
 
@@ -145,7 +145,6 @@ class Trainer:
         self.classifier_train(self.net2, self.optimizer2, self.train2_loader, self.val_loader, name='Net2')
 
     def test(self, test_loader):
-        # Evaluate Loop
         self.net0.eval()
         self.net1.eval()
         self.net2.eval()
@@ -173,7 +172,7 @@ class Trainer:
         print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
 
         classes = ['plane', 'car', 'bird', 'cat',
-           'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+                   'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
         print(classification_report(target_list, predicted_list, target_names=classes))
 
@@ -186,7 +185,3 @@ class Trainer:
         self.net0.load_model(path=path, name='0')
         self.net1.load_model(path=path, name='1')
         self.net2.load_model(path=path, name='2')
-
-
-
-
