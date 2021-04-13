@@ -8,7 +8,7 @@ WORKDIR /work
 ADD requirements.txt /work
 RUN pip3 install install -r requirements.txt
 
-COPY main.py get_stats.py load_data.py model.py train.py test.py utils.py download_weights.sh /work/
+COPY main.py get_stats.py load_data.py model.py trainer.py test.py utils.py download_weights.sh /work/
 RUN /bin/bash download_weights.sh
 
 ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs
