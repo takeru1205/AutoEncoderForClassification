@@ -16,6 +16,9 @@ $sudo docker run -it --gpus all ae_classify /bin/bash
 # Train and evaluate
 python3 main.py
 
+# If want to save model weights, use save option
+python3 main.py --save
+
 # Only test with trained model
 python3 test.py
 ```
