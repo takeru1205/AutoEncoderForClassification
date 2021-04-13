@@ -44,11 +44,9 @@ CIFAR-10 Dataset
 
 Max Size 2500 images
 
-2. Bird
-
-4. Deer
-
-9. Truck
+  2.Bird
+  4.Deer
+  9.Truck
 
 Max Size 5000 images
 
