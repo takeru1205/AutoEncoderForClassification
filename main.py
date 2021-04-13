@@ -5,7 +5,7 @@ import torchvision.transforms as transforms
 from torch.utils.tensorboard import SummaryWriter
 
 from load_data import generate_data
-from train import Trainer
+from trainer import Trainer
 
 
 # Command Line Arguments

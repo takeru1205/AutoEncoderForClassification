@@ -4,7 +4,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.tensorboard import SummaryWriter
 
-from train import Trainer
+from trainer import Trainer
 
 
 # Get from calc_img_stats() with Imbalanced Data
