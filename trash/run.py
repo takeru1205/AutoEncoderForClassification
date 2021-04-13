@@ -12,30 +12,49 @@ from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 
 from load_data import ImbalancedCIFAR10
-from model import Combine
+from model import Combine, CAE3
 
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
+SEED = 40
+
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+torch.cuda.manual_seed(SEED)
+
+transform_mean = [0.4920, 0.4825, 0.4500]
+transform_std = [0.2039, 0.2009, 0.2026]
+
+train_transform = transforms.Compose(
+        [
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation(degrees=20),
+            transforms.RandomResizedCrop(32),
+            transforms.ToTensor(),
+            transforms.Normalize(transform_mean, transform_std)
+        ])
+
+
 transform = transforms.Compose(
         [transforms.ToTensor(),
-         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+         transforms.Normalize(transform_mean, transform_std)]
         )
 
 # Load Train Data
 train_imbalance_class_ratio = np.array([1., 1., .5, 1., .5, 1., 1., 1., 1., .5])
 # train_imbalance_class_ratio = np.array([1.] * 10)
-train_set = ImbalancedCIFAR10(train_imbalance_class_ratio, transform=transform)
-train_loader = torch.utils.data.DataLoader(train_set, batch_size=8, shuffle=True, num_workers=4)
+train_set = ImbalancedCIFAR10(train_imbalance_class_ratio, transform=train_transform)
+train_loader = torch.utils.data.DataLoader(train_set, batch_size=64, shuffle=True, num_workers=4)
 
 # Load Test Data
-test_set = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+test_set = torchvision.datasets.CIFAR10(root='../data', train=False, download=True, transform=transform)
 test_loader = torch.utils.data.DataLoader(test_set, batch_size=4, shuffle=False, num_workers=4)
 
 classes = ('plane', 'car', 'bird', 'cat',
            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
-net = Combine()
+net = CAE3()
 net = net.to(device)
 
 criterion = nn.CrossEntropyLoss()
@@ -51,7 +70,7 @@ for epoch in range(10):
     for i, data in enumerate(train_loader, 0):
         inputs, _ = data
         inputs = inputs.to(device)
-        decoded = net.autoencode(inputs)
+        decoded = net(inputs)
         ae_loss = ae_criterion(decoded, inputs)
         optimizer.zero_grad()
         ae_loss.backward()
@@ -74,7 +93,7 @@ for epoch in range(10):
         inputs, labels = data
         inputs = inputs.to(device)
         labels = labels.to(device)
-        predicted = net.predict(inputs)
+        predicted = net.classify(inputs)
         loss = criterion(predicted, labels)
 
         optimizer.zero_grad()
@@ -107,11 +126,11 @@ def imshow(img):
 # Evaluate Loop
 dataiter = iter(test_loader)
 images, labels = dataiter.next()
-imshow(torchvision.utils.make_grid(images))
+# imshow(torchvision.utils.make_grid(images))
 
 print('GroundTruth: ', ' '.join('%5s' % classes[labels[j]] for j in range(4)))
 
-outputs = net.predict(images.to(device))
+outputs = net.classify(images.to(device))
 _, predicted = torch.max(outputs, 1)
 print('Predicted: ', ' '.join('%5s' % classes[predicted[j]] for j in range(4)))
 
@@ -121,7 +140,7 @@ total = 0
 with torch.no_grad():
     for data in test_loader:
         images, labels = data
-        outputs = net.predict(images.to(device))
+        outputs = net.classify(images.to(device))
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
         correct += (predicted.to(device) == labels.to(device)).sum().item()
@@ -132,7 +151,7 @@ class_total = list(0. for i in range(10))
 with torch.no_grad():
     for data in test_loader:
         images, labels = data
-        outputs = net.predict(images.to(device))
+        outputs = net.classify(images.to(device))
         _, predicted = torch.max(outputs, 1)
         c = (predicted.to(device) == labels.to(device)).squeeze()
         for i in range(4):

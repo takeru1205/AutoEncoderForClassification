@@ -44,9 +44,11 @@ CIFAR-10 Dataset
 
 Max Size 2500 images
 
-2. Bird
-4. Deer
-9. Truck
+  2.Bird  
+
+  4.Deer  
+
+  9.Truck  
 
 Max Size 5000 images
 
@@ -61,11 +63,11 @@ Max Size 5000 images
 
 | Algorithm | Mean | Std |
 | :---: | :---: | :---: |
-| Combine | 31.6 | 10.818 |
-| CAE(Over Sample) | 72.8 | 0.4 |
-| CAE(Under Sample) | 69.6 | 0.489 |
-| CAE(2ensemble) | 75.0 | 0.632 |
-| CAE(3ensemble) | 77.6 | 0.489 | 
+| Simple CAE | 31.6 | 10.818 |
+| Over Sampled CAE | 72.8 | 0.4 |
+| Under Sampled CAE | 69.6 | 0.489 |
+| 2 Ensemble Under Sampled CAE | 75.0 | 0.632 |
+| 3 Ensemble Over and Under Sampled CAE | 77.6 | 0.489 | 
 
 ### Pretrained Model
 
