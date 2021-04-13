@@ -78,12 +78,32 @@ def calc_img_stats(loader):
 
 
 def unnormalize(img, std, mean):
+    """
+    Unnormalize normalized data
+
+    Args:
+        img(torch.Tensor): normalized image
+        std(sequencial): standard deviation of train data
+        mean(sequencial): means of train data
+
+    Returns(torch.Tensor): unnormalized data
+
+    """
     for i, s, m in zip(img, std, mean):
         i.mul_(s).add_(s)
     return img
 
 
 def imsave(img, mean, std, fname='sample.png'):
+    """
+    To save images
+
+    Args:
+        img(torch.Tensor): make_grid() image
+        mean(sequencial): standard deviation of train data
+        std(sequential): means of train data
+        fname(str): file name to save
+    """
     for i, s, m in zip(img, std, mean):
         i.mul_(s)
         i.add_(m)
@@ -94,6 +114,19 @@ def imsave(img, mean, std, fname='sample.png'):
 
 
 def image_result(images, net, net1, net2, transform_mean, transform_std, writer, epoch=0):
+    """
+    to reconstruct data from input image
+
+    Args:
+        images(torch.Tensor): images to input(target data)
+        net(torch.nn.Module): Auto Encoder Network
+        net1(torch.nn.Module): Auto Encoder Network
+        net2(torch.nn.Module): Auto Encoder Network
+        transform_mean(sequencial): means for normalize data in transform
+        transform_std(sequencial): standard deviation for normalize data in transform
+        writer(torch.utils.tensorboard.SummaryWriter): summary writer to output to tensorboard
+        epoch(int): the information for tensorboard
+    """
     # net
     output = net(images)
     img_grid = torchvision.utils.make_grid(output.cpu().data)

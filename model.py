@@ -6,7 +6,13 @@ import torch.nn.functional as F
 
 
 class Encoder(nn.Module):
+    """
+    Encoder part of auto encoder. Encoder is used to feature extraction.
+    """
     def __init__(self):
+        """
+
+        """
         super(Encoder, self).__init__()
 
         self.conv1 = nn.Conv2d(3, 12, 3, stride=1, padding=1)
@@ -25,6 +31,15 @@ class Encoder(nn.Module):
         self.bn3 = nn.BatchNorm2d(48)
 
     def forward(self, img):
+        """
+        To decrease dimention and feature extract
+
+        Args:
+            img(torch.Tensor): batch_size x channel x  height x width
+
+        Returns(torch.Tensor): batch_size x 48 x 16 x 16
+
+        """
         x = self.conv1(img)
         x = self.bn1(x)
         x = self.dp1(x)
@@ -41,8 +56,15 @@ class Encoder(nn.Module):
 
         return x
 
+
 class Decoder(nn.Module):
+    """
+    To reconstruct image from output which is predicted from encoder
+    """
     def __init__(self):
+        """
+
+        """
         super(Decoder, self).__init__()
 
         self.deconv3 = nn.ConvTranspose2d(48, 24, 4, stride=2, padding=1)
@@ -60,6 +82,15 @@ class Decoder(nn.Module):
         self.bn2 = nn.BatchNorm2d(12)
 
     def forward(self, x):
+        """
+        To reconstruct from encoder output
+
+        Args:
+            x(torch.Tensor): batch_size x 48 x 16 x 16
+
+        Returns(torch.Tensor): batch_size x channel x height x width
+
+        """
         x = self.deconv3(x)
         x = self.bn3(x)
         x = self.dp1(x)
@@ -77,6 +108,9 @@ class Decoder(nn.Module):
 
 
 class Classifier(nn.Module):
+    """
+    Classifier image which is feature extracted from encoder
+    """
     def __init__(self):
         super(Classifier, self).__init__()
         self.conv1 = nn.Conv2d(48, 48, 3, padding=1)
@@ -102,6 +136,15 @@ class Classifier(nn.Module):
         nn.init.xavier_normal_(self.fc3.weight)
         
     def forward(self, x):
+        """
+        To predict from input
+
+        Args:
+            x(torch.Tensor): batch_size x 48 x 16 x 16
+
+        Returns(torch.Tensor): batch_size x 10
+
+        """
         x = F.relu(self.conv1(x))
         x = self.bn1(self.pool1(x))
 
@@ -128,16 +171,44 @@ class CAE(nn.Module):
         self.classifier = Classifier()
     
     def forward(self, x):
+        """
+        To reconstruct input image
+
+        Args:
+            x(torch.Tensor): batch_size x channel x  height x width
+
+        Returns(torch.Tensor): batch_size x channel x height x width
+
+        """
         x = self.encoder(x)
         x = self.decoder(x)
         return x
     
     def classify(self, x):
+        """
+        To classify image.
+
+        Args:
+            x(torch.Tensor):  batch_size x channel x  height x width
+
+        Returns(torch.Tensor): batch_size x 10
+
+        """
         x = self.encoder(x)
         x = self.classifier(x)
         return x
 
     def save_model(self, path='model_weights', name=None):
+        """
+        Save model weights
+
+        Args:
+            path(str): directory to save weights
+            name(str): to indentify the model weights
+
+        Returns: None
+
+        """
         if name is not None:
             torch.save(self.encoder.state_dict(), os.path.join(path, f'Encoder-{name}'))
             torch.save(self.decoder.state_dict(), os.path.join(path, f'Decoder-{name}'))
@@ -148,6 +219,16 @@ class CAE(nn.Module):
         torch.save(self.classifier.state_dict(), os.path.join(path, 'Classifier'))
 
     def load_model(self, path='model_weights', name=None):
+        """
+        Load model weights
+
+        Args:
+            path(str): directory to save weights
+            name(str): to indentify the model weights
+
+        Returns: None
+
+        """
         if name is not None:
             self.encoder.load_state_dict(torch.load(os.path.join(path, f'Encoder-{name}')))
             self.decoder.load_state_dict(torch.load(os.path.join(path, f'Decoder-{name}')))
