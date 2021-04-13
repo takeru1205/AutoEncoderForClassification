@@ -156,4 +156,3 @@ class CAE(nn.Module):
         self.encoder.load_state_dict(torch.load(os.path.join(path, 'Encoder')))
         self.decoder.load_state_dict(torch.load(os.path.join(path, 'Decoder')))
         self.classifier.load_state_dict(torch.load(os.path.join(path, 'Classifier')))
-
