@@ -13,8 +13,18 @@ from utils import ImbalancedDatasetSampler
 transform = transforms.Compose(
         [transforms.ToTensor(),])
 
+
 class ImbalancedCIFAR10(Dataset):
     def __init__(self, imbal_class_prop, root='./data', train=True, download=True, transform=transform):
+        """
+
+        Args:
+            imbal_class_prop(np.ndarray): ratio of each class to be used
+            root(string): data directory
+            train(bool): If True download train data, else download test data
+            download(bool): whether data download or not
+            transform(transforms): preprocessing data
+        """
         self.dataset = torchvision.datasets.CIFAR10(
             root=root, train=train, download=download, transform=transform)
         self.train = train
@@ -35,13 +45,10 @@ class ImbalancedCIFAR10(Dataset):
             for count, prop in zip(class_datasize, self.imbal_class_prop)
         ]
         # Get class indices for reduced class count
-        classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 
-                'dog', 'frog', 'horse', 'ship', 'truck']
         idxs = []
         for c in range(class_counts):
             imbal_class_count = self.imbal_class_counts[c]
             idxs.append(class_indices[c][:imbal_class_count])
-            # print(f'Label {c}, {classes[c]} Data Size: {imbal_class_count}')
         idxs = np.hstack(idxs)
         self.labels = targets[idxs]
         return idxs
@@ -55,19 +62,42 @@ class ImbalancedCIFAR10(Dataset):
 
 
 def separate_data(dataset, indices, minority=(2, 4, 9)):
+    """
+    To separate one dataset to two dataset of same minority size
+
+    Args:
+        dataset(Dataset): dataset includes majority data and minority data
+        indices(list): indices of used to be from dataset
+        minority(sequence): indexes of minority class
+
+    Returns(list): two set of indices of used to be from dataset
+
+    """
     class_dict = {i:[] for i in range(10)}
     data_len = len(indices)
     for idx in range(data_len):
         _, label = dataset[idx]
         class_dict[label].append(indices[idx])
-    # for k in class_dict.keys():
-    #     print(f'Label {k}: {len(class_dict[k])}')
     d1_indices = [class_dict[k] if k in minority else class_dict[k][:len(class_dict[k])//2] for k in class_dict.keys() ]
     d2_indices = [class_dict[k] if k in minority else class_dict[k][len(class_dict[k])//2:] for k in class_dict.keys() ]
     return sum(d1_indices, []), sum(d2_indices, [])
 
 
 def generate_data(train_imbalance_class_ratio, train_transform, evaluate_transform, over_sample_batch_size=128, under_sample_batch_size=64, val_batch_size=64, test_batch_size=4):
+    """
+    To generate dataset from imbalanced dataset
+    Args:
+        train_imbalance_class_ratio(np.ndarray):  ratio of each class to be used
+        train_transform(torchvision.transform): preprocessing data for training
+        evaluate_transform(torchvision.transform): preprocessing data for evaluate
+        over_sample_batch_size(int): batch size when over sample data
+        under_sample_batch_size(int): batch size when under sample data
+        val_batch_size(int): batch size for validation data
+        test_batch_size(int): batch size for test data
+
+    Returns(DataLoader): over sampled dataloader, under sampled dataloader1, under sampled dataloader2, validation dataloader, test dataloader
+
+    """
     # Load Train Data
     train_set = ImbalancedCIFAR10(train_imbalance_class_ratio, transform=evaluate_transform)
 

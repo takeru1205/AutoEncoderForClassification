@@ -6,11 +6,25 @@ import torchvision
 from sklearn.metrics import classification_report
 
 from model import CAE
-from utils import image_result
 
 
 class Trainer:
     def __init__(self, train0_loader=None, train1_loader=None, train2_loader=None, val_loader=None, ae_epoch=40, train_epoch=40, ae_lr=0.0005, classify_lr=0.0005, writer=None):
+        """
+        To train and test
+
+        Args:
+            train0_loader(torch.utils.data.Dataset): dataloader of oversampled dataset
+            train1_loader(torch.utils.data.Dataset): dataloader of undersampled dataset
+            train2_loader(torch.utils.data.Dataset): dataloader of undersampled dataset
+            val_loader(torch.utils.data.Dataset): dataloader of validation dataset
+            ae_epoch(int): epoch for auto encoder train
+            train_epoch(int): epoch for classify train
+            ae_lr(float): learning rate for auto encoder
+            classify_lr(float): learning rate for classifier
+            writer(torch.nn.utils.tensorboard.SummaryWriter): tensorboard for save logs
+        """
+
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         self.net0 = CAE()
@@ -21,8 +35,8 @@ class Trainer:
         self.net1 = self.net1.to(self.device)
         self.net2 = self.net2.to(self.device)
 
-        self.ae_epoch = 40
-        self.train_epoch = 40
+        self.ae_epoch = ae_epoch
+        self.train_epoch = train_epoch
 
         # Optimizer
         self.ae0_optimizer = optim.AdamW(itertools.chain(self.net0.encoder.parameters(), self.net0.decoder.parameters()), lr=ae_lr, betas=(0.9, 0.999))
@@ -45,6 +59,17 @@ class Trainer:
         self.writer = writer
 
     def ae_train(self, net, ae_optimizer, train_loader, val_loader, name='Net'):
+        """
+        For auto encoder training
+
+        Args:
+            net(torch.nn.Module): auto encoder network
+            ae_optimizer(torch.optim): optimizer for train auto encoder
+            train_loader(torch.utils.dataset.DataLoader): dataloader for training
+            val_loader(torch.utils.dataset.DataLoader): dataloader for validation
+            name(str): to identify network
+
+        """
         print(f'Start {name} Auto Encoder Training')
         ae_iter = 0
         for epoch in range(self.ae_epoch):
@@ -72,6 +97,14 @@ class Trainer:
         self.reconstruct_image(net, images, name)
 
     def reconstruct_image(self, net, images, name):
+        """
+        To reconstruct image from input image
+
+        Args:
+            net(torch.nn.Module): network of auto encoder
+            images(torch.Tensor): image to input to auto encoder
+            name(str): to identify network
+        """
         target_img_grid = torchvision.utils.make_grid(images)
         images = images.to(self.device)
         output = net(images)
@@ -81,6 +114,16 @@ class Trainer:
             self.writer.add_image('Target Image', img_grid, self.ae_epoch)
 
     def classifier_train(self, net, optimizer, train_loader, val_loader, name='Net'):
+        """
+        For classifier training
+
+        Args:
+            net(torch.nn.Module): classifier network
+            optimizer(torch.optim): optimizer for train classifier
+            train_loader(torch.utils.dataset.DataLoader): dataloader for training
+            val_loader(torch.utils.dataset.DataLoader): dataloader for validation
+            name(str): to identify network
+        """
         print(f'Start Classifier Train {name}')
         train_iter, val_iter = 0, 0
         for epoch in range(self.train_epoch):
@@ -136,6 +179,9 @@ class Trainer:
             print(f'Epoch: {epoch}, Validation Score: %d %%' % (100 * correct / total))
 
     def train(self):
+        """
+        To train net works through auto encoder and classifier
+        """
         self.ae_train(self.net0, self.ae0_optimizer, self.train0_loader, self.val_loader, name='Net0')
         self.ae_train(self.net1, self.ae1_optimizer, self.train1_loader, self.val_loader, name='Net1')
         self.ae_train(self.net2, self.ae2_optimizer, self.train2_loader, self.val_loader, name='Net2')
@@ -145,6 +191,12 @@ class Trainer:
         self.classifier_train(self.net2, self.optimizer2, self.train2_loader, self.val_loader, name='Net2')
 
     def test(self, test_loader):
+        """
+        To test networks
+
+        Args:
+            test_loader(torch.utils.dataset.DataLoader): dataloader of test data
+        """
         self.net0.eval()
         self.net1.eval()
         self.net2.eval()
@@ -152,9 +204,6 @@ class Trainer:
         total = 0
         predicted_list = []
         target_list = []
-
-        class_correct = [0.] * 10
-        class_total = [0.] * 10
 
         with torch.no_grad():
             for data in test_loader:
@@ -177,11 +226,23 @@ class Trainer:
         print(classification_report(target_list, predicted_list, target_names=classes))
 
     def save_model(self, path='model_weights'):
+        """
+        Save model weights
+
+        Args:
+            path(str): directory to save weights
+        """
         self.net0.save_model(path=path, name='0')
         self.net1.save_model(path=path, name='1')
         self.net2.save_model(path=path, name='2')
 
     def load_model(self, path='model_weights'):
+        """
+        Load model weights
+
+        Args:
+            path(str): directory to load weights
+        """
         self.net0.load_model(path=path, name='0')
         self.net1.load_model(path=path, name='1')
         self.net2.load_model(path=path, name='2')
