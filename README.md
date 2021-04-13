@@ -5,6 +5,21 @@
 
 Implement Classifier model with Auto Encoder.
 
+## Usage
+```Shell
+$sudo docker build -t ae_classify .
+
+$sudo docker run -it --gpus all ae_classify /bin/bash
+
+# in the container below
+
+# Train and evaluate
+python3 main.py
+
+# Only test with trained model
+python3 test.py
+```
+
 
 ### Architecture
 
